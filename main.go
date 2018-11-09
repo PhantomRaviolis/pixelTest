@@ -3,7 +3,6 @@ package main
 import (
 	"image"
 	"os"
-	"time"
 
 	_ "image/png"
 
@@ -11,47 +10,6 @@ import (
 	"github.com/faiface/pixel/pixelgl"
 	"golang.org/x/image/colornames"
 )
-
-func run() {
-	cfg := pixelgl.WindowConfig{
-		Title:  "Your Window!",
-		Bounds: pixel.R(0, 0, 1024, 768),
-		VSync:  true,
-	}
-	win, err := pixelgl.NewWindow(cfg)
-	if err != nil {
-		panic(err)
-	}
-
-	win.SetSmooth(true)
-
-	pic, err := loadPicture("snake.png")
-	if err != nil {
-		panic(err)
-	}
-
-	sprite := pixel.NewSprite(pic, pic.Bounds())
-
-	angle := 0.0
-	last := time.Now()
-
-	for !win.Closed() {
-		dt := time.Since(last).Seconds()
-		last = time.Now()
-
-		angle += 0.05 * dt
-
-		win.Clear(colornames.Yellow)
-
-		mat := pixel.IM
-		mat = mat.Rotated(pixel.ZV, angle)
-		mat = mat.Moved(win.Bounds().Center())
-		sprite.Draw(win, mat)
-
-		win.Update()
-	}
-
-}
 
 func loadPicture(path string) (pixel.Picture, error) {
 	file, err := os.Open(path)
@@ -64,6 +22,47 @@ func loadPicture(path string) (pixel.Picture, error) {
 		return nil, err
 	}
 	return pixel.PictureDataFromImage(img), nil
+}
+
+func run() {
+	cfg := pixelgl.WindowConfig{
+		Title:  "Pixel Rocks!",
+		Bounds: pixel.R(0, 0, 1024, 768),
+		VSync:  true,
+	}
+	win, err := pixelgl.NewWindow(cfg)
+	if err != nil {
+		panic(err)
+	}
+
+	win.SetSmooth(false)
+
+	spritesheet, err := loadPicture("trees.png")
+	if err != nil {
+		panic(err)
+	}
+
+	var treesFrames []pixel.Rect
+	for x := spritesheet.Bounds().Min.X; x < spritesheet.Bounds().Max.X; x += 32 {
+		for y := spritesheet.Bounds().Min.Y; y < spritesheet.Bounds().Max.Y; y += 32 {
+			treesFrames = append(treesFrames, pixel.R(x, y, x+32, y+32))
+		}
+	}
+
+	tree := pixel.NewSprite(spritesheet, treesFrames[5])
+
+	for !win.Closed() {
+		win.Clear(colornames.Whitesmoke)
+
+		tree.Draw(win, pixel.IM.Scaled(pixel.ZV, 16).Moved(win.Bounds().Center()))
+
+		win.Update()
+	}
+
+	for !win.Closed() {
+		win.Clear(colornames.Whitesmoke)
+		win.Update()
+	}
 }
 
 func main() {
