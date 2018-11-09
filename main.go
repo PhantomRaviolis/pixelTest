@@ -3,6 +3,7 @@ package main
 import (
 	"image"
 	"os"
+	"time"
 
 	_ "image/png"
 
@@ -15,11 +16,15 @@ func run() {
 	cfg := pixelgl.WindowConfig{
 		Title:  "Your Window!",
 		Bounds: pixel.R(0, 0, 1024, 768),
+		VSync:  true,
 	}
 	win, err := pixelgl.NewWindow(cfg)
 	if err != nil {
 		panic(err)
 	}
+
+	win.SetSmooth(true)
+
 	pic, err := loadPicture("snake.png")
 	if err != nil {
 		panic(err)
@@ -27,10 +32,22 @@ func run() {
 
 	sprite := pixel.NewSprite(pic, pic.Bounds())
 
-	win.Clear(colornames.Yellow)
-	sprite.Draw(win, pixel.IM)
+	angle := 0.0
+	last := time.Now()
 
 	for !win.Closed() {
+		dt := time.Since(last).Seconds()
+		last = time.Now()
+
+		angle += 0.05 * dt
+
+		win.Clear(colornames.Yellow)
+
+		mat := pixel.IM
+		mat = mat.Rotated(pixel.ZV, angle)
+		mat = mat.Moved(win.Bounds().Center())
+		sprite.Draw(win, mat)
+
 		win.Update()
 	}
 
