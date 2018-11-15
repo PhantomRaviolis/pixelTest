@@ -2,6 +2,7 @@ package main
 
 import (
 	"image"
+	"math/rand"
 	"os"
 
 	_ "image/png"
@@ -49,18 +50,22 @@ func run() {
 		}
 	}
 
-	tree := pixel.NewSprite(spritesheet, treesFrames[5])
+	var (
+		trees    []*pixel.Sprite
+		matrices []pixel.Matrix
+	)
 
 	for !win.Closed() {
-		win.Clear(colornames.Whitesmoke)
+		if win.JustPressed(pixelgl.MouseButtonLeft) {
+			tree := pixel.NewSprite(spritesheet, treesFrames[rand.Intn(len(treesFrames))])
+			trees = append(trees, tree)
+			matrices = append(matrices, pixel.IM.Scaled(pixel.ZV, 4).Moved(win.MousePosition()))
+		}
+		win.Clear(colornames.Forestgreen)
 
-		tree.Draw(win, pixel.IM.Scaled(pixel.ZV, 16).Moved(win.Bounds().Center()))
-
-		win.Update()
-	}
-
-	for !win.Closed() {
-		win.Clear(colornames.Whitesmoke)
+		for i, tree := range trees {
+			tree.Draw(win, matrices[i])
+		}
 		win.Update()
 	}
 }
