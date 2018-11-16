@@ -2,8 +2,10 @@ package main
 
 import (
 	"image"
+	"math"
 	"math/rand"
 	"os"
+	"time"
 
 	_ "image/png"
 
@@ -51,16 +53,43 @@ func run() {
 	}
 
 	var (
-		trees    []*pixel.Sprite
-		matrices []pixel.Matrix
+		camPos       = pixel.ZV
+		camSpeed     = 500.0
+		camZoom      = 1.0
+		camZoomSpeed = 1.2
+		trees        []*pixel.Sprite
+		matrices     []pixel.Matrix
 	)
 
+	last := time.Now()
 	for !win.Closed() {
+		dt := time.Since(last).Seconds()
+		last = time.Now()
+
+		cam := pixel.IM.Scaled(camPos, camZoom).Moved(win.Bounds().Center().Sub(camPos))
+		win.SetMatrix(cam)
+
 		if win.JustPressed(pixelgl.MouseButtonLeft) {
 			tree := pixel.NewSprite(spritesheet, treesFrames[rand.Intn(len(treesFrames))])
 			trees = append(trees, tree)
-			matrices = append(matrices, pixel.IM.Scaled(pixel.ZV, 4).Moved(win.MousePosition()))
+			mouse := cam.Unproject(win.MousePosition())
+			matrices = append(matrices, pixel.IM.Scaled(pixel.ZV, 4).Moved(mouse))
 		}
+
+		if win.Pressed(pixelgl.KeyA) {
+			camPos.X -= camSpeed * dt
+		}
+		if win.Pressed(pixelgl.KeyD) {
+			camPos.X += camSpeed * dt
+		}
+		if win.Pressed(pixelgl.KeyS) {
+			camPos.Y -= camSpeed * dt
+		}
+		if win.Pressed(pixelgl.KeyW) {
+			camPos.Y += camSpeed * dt
+		}
+		camZoom *= math.Pow(camZoomSpeed, win.MouseScroll().Y)
+
 		win.Clear(colornames.Forestgreen)
 
 		for i, tree := range trees {
