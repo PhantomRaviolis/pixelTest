@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"image"
 	"math"
 	"math/rand"
@@ -31,7 +32,6 @@ func run() {
 	cfg := pixelgl.WindowConfig{
 		Title:  "Pixel Rocks!",
 		Bounds: pixel.R(0, 0, 1024, 768),
-		VSync:  true,
 	}
 	win, err := pixelgl.NewWindow(cfg)
 	if err != nil {
@@ -44,6 +44,8 @@ func run() {
 	if err != nil {
 		panic(err)
 	}
+
+	batch := pixel.NewBatch(&pixel.TrianglesData{}, spritesheet)
 
 	var treesFrames []pixel.Rect
 	for x := spritesheet.Bounds().Min.X; x < spritesheet.Bounds().Max.X; x += 32 {
@@ -59,6 +61,8 @@ func run() {
 		camZoomSpeed = 1.2
 		trees        []*pixel.Sprite
 		matrices     []pixel.Matrix
+		frames       = 0
+		second       = time.Tick(time.Second)
 	)
 
 	last := time.Now()
@@ -96,6 +100,14 @@ func run() {
 			tree.Draw(win, matrices[i])
 		}
 		win.Update()
+
+		frames++
+		select {
+		case <-second:
+			win.SetTitle(fmt.Sprintf("%s | FPS: %d", cfg.Title, frames))
+			frames = 0
+		default:
+		}
 	}
 }
 
